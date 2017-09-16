@@ -15,6 +15,7 @@ App.main = function(){
 	
 	this.point_text = "Points : ";
 	this.points = 0;
+	this.fruit_offset = 20;	
 }
 
 App.main.prototype = {
@@ -32,24 +33,23 @@ App.main.prototype = {
 	create : function(){
 		this.game.stage.backgroundColor = 0x5d5d5d;
 
-		this.game.physics.startSystem(Phaser.Physics.ARCADE);
+		// this.game.physics.startSystem(Phaser.Physics.ARCADE);
 
 		/*
 			Sprites
 		*/ 
 		/* Snake */
-		this.snake_block = this.game.add.sprite(this.game.world.centerX,this.game.world.centerY,'snake_block');
+		this.snake_block = this.game.add.sprite(
+								this.game.world.centerX,
+								this.game.world.centerY,
+								'snake_block'
+							);
 		this.snake_block.anchor.setTo(0.5,0.5);
 		this.snake_block.scale.setTo(0.2);
+		this.game.physics.enable(this.snake_block,Phaser.Physics.ARCADE)
 	   	
 		/* Fruit */
-		var fruit_offset = 20;	
-		// position the fruit in some random position in the screen
-		// x: points between(fruit_offset,game.width-fruit_offset)
-		// y: points between(fruit_offset,game.height-fruit_offset)
-		this.fruit = this.game.add.sprite(this.getRandom(fruit_offset,this.game.width-fruit_offset), this.getRandom(fruit_offset,this.game.height-fruit_offset), 'fruit');
-		this.fruit.anchor.setTo(0.5);
-		this.fruit.scale.setTo(0.05);
+		this.drawFruit();
 
 		/* Point Text */
 		var style = { font: "32px Arial", fill: "#ffffff", align: "center" };
@@ -63,13 +63,34 @@ App.main.prototype = {
 
 		// this.snake_block.body.collideWorldBounds = true;
 		// this.fruit.body.collideWorldBounds = true;
- 	
+	},
+
+	drawFruit : function(){
+		// position the fruit in some random position in the screen
+		// x: points between(fruit_offset,game.width-fruit_offset)
+		// y: points between(fruit_offset,game.height-fruit_offset)
+		this.fruit = this.game.add.sprite(
+						this.getRandom(this.fruit_offset,this.game.width - this.fruit_offset), 
+						this.getRandom(this.fruit_offset,this.game.height - this.fruit_offset), 
+						'fruit'
+					);
+		this.fruit.anchor.setTo(0.5);
+		this.fruit.scale.setTo(0.05);
+		this.game.physics.enable(this.fruit,Phaser.Physics.ARCADE)
 	},
 
 	/*
 	executes multiple time per second to update game state
 	*/
 	update : function(){
+	    this.handleKeyUpdates();
+	    this.moveSnake();
+	    this.game.physics.arcade.overlap(this.snake_block,this.fruit,this.onCollision,null,this)
+	},
+
+	/*
+	*/ 
+	handleKeyUpdates : function(){
 		if (this.game.input.keyboard.isDown(Phaser.Keyboard.LEFT)){
 			if( this.key_pressed != "right"){
 	    		this.key_pressed = "left";
@@ -90,15 +111,17 @@ App.main.prototype = {
 	    		this.key_pressed = "down";
 	    	}
 	    }
-	    
-	    this.moveSnake();
 	},
 
 	/*
 	Handles collision
 	*/ 
-	onCollision : function(){
+	onCollision : function(snake,fruit){
+		fruit.kill();
+		this.points +=1;
 		this.updateText();
+		this.drawFruit();
+
 	},
 
 	/*
