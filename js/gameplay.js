@@ -11,7 +11,7 @@ window.onload = function () {
 var App = {};
 App.main = function(){
 	this.key_pressed = "up";
-	this.speed = 10;
+	this.speed = 5;
 	
 	this.point_text = "Points : ";
 	this.points = 0;
@@ -33,36 +33,31 @@ App.main.prototype = {
 	create : function(){
 		this.game.stage.backgroundColor = 0x5d5d5d;
 
-		// this.game.physics.startSystem(Phaser.Physics.ARCADE);
-
 		/*
 			Sprites
 		*/ 
 		/* Snake */
-		this.snake_block = this.game.add.sprite(
-								this.game.world.centerX,
-								this.game.world.centerY,
-								'snake_block'
-							);
-		this.snake_block.anchor.setTo(0.5,0.5);
-		this.snake_block.scale.setTo(0.2);
-		this.game.physics.enable(this.snake_block,Phaser.Physics.ARCADE)
-	   	
+		this.snake_head = this.drawSnake();
+		console.log(this.snake_head);
+		
 		/* Fruit */
 		this.drawFruit();
 
 		/* Point Text */
 		var style = { font: "32px Arial", fill: "#ffffff", align: "center" };
 	    this.text = this.game.add.text(0, 0, this.point_text + this.points , style);
+	},
 
-	    /* 
-	    	Physics 
-	    */ 
-		// this.game.physics.startSystem(Phaser.Physics.ARCADE);
-		// this.game.physics.arcade.enable([this.snake_block, this.fruit]);
-
-		// this.snake_block.body.collideWorldBounds = true;
-		// this.fruit.body.collideWorldBounds = true;
+	drawSnake : function(){
+		var snake_block = this.game.add.sprite(
+								this.game.world.centerX,
+								this.game.world.centerY,
+								'snake_block'
+							);
+		snake_block.anchor.setTo(0.5,0.5);
+		snake_block.scale.setTo(0.2);
+		this.game.physics.enable(snake_block,Phaser.Physics.ARCADE)
+		return snake_block;
 	},
 
 	drawFruit : function(){
@@ -85,10 +80,11 @@ App.main.prototype = {
 	update : function(){
 	    this.handleKeyUpdates();
 	    this.moveSnake();
-	    this.game.physics.arcade.overlap(this.snake_block,this.fruit,this.onCollision,null,this)
+	    this.game.physics.arcade.overlap(this.snake_head,this.fruit,this.onCollision,null,this)
 	},
 
 	/*
+	handles key updated changes
 	*/ 
 	handleKeyUpdates : function(){
 		if (this.game.input.keyboard.isDown(Phaser.Keyboard.LEFT)){
@@ -120,8 +116,18 @@ App.main.prototype = {
 		fruit.kill();
 		this.points +=1;
 		this.updateText();
+		if(this.points % 5 == 0){
+			this.increaseSpeed();
+		}
+		this.updateSnake()
 		this.drawFruit();
+	},
 
+	/*
+	Add node to the snake
+	*/
+	updateSnake : function(){
+		// this.snake.nextNode = 
 	},
 
 	/*
@@ -131,36 +137,42 @@ App.main.prototype = {
 		this.text.setText(this.point_text + this.points);
 	},
 
+	increaseSpeed : function(){
+		if(this.speed < 10){
+			this.speed+=1 
+		}
+	},
+
 	/*
 	Moves snake on the basis of direction that was last key_pressed
 	*/ 
 	moveSnake: function (){
 		switch(this.key_pressed){
 			case "up":
-				this.snake_block.y -= 10;
+				this.snake_head.y -= this.speed;
 				break;
 			case "down":
-				this.snake_block.y += 10;		
+				this.snake_head.y += this.speed;		
 				break;
 			case "right":
-				this.snake_block.x += 10;
+				this.snake_head.x += this.speed;
 				break;
 			case "left":
-				this.snake_block.x -= 10;
+				this.snake_head.x -= this.speed;
 				break;
 			default:
 				console.log("error in snake direction");
 		}
 
 		// limit snake withing the game boundaries
-		if(this.snake_block.x<=0){
-			this.snake_block.x = this.game.width;
-		}else if(this.snake_block.x>=this.game.width){
-			this.snake_block.x = 0;
-		}else if(this.snake_block.y >= this.game.height){
-			this.snake_block.y = 0;
-		}else if(this.snake_block.y <= 0){
-			this.snake_block.y = this.game.height;
+		if(this.snake_head.x<=0){
+			this.snake_head.x = this.game.width;
+		}else if(this.snake_head.x>=this.game.width){
+			this.snake_head.x = 0;
+		}else if(this.snake_head.y >= this.game.height){
+			this.snake_head.y = 0;
+		}else if(this.snake_head.y <= 0){
+			this.snake_head.y = this.game.height;
 		}
 	},
 
